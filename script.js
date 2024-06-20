@@ -69,7 +69,7 @@ function calculate() {
         data.sourceTemp = parseFloat(formData.get('sourceTemp'));
     }
 
-    fetch(`http://localhost:5000/calculate-${calcType}`, {
+    fetch(`https://pcb-temp-calculator.vercel.app/calculate-${calcType}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
