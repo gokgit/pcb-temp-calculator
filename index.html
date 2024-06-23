@@ -3,15 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temperature Calculator</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Thermal Calculator</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Temperature Calculator</h1>
-        <button onclick="navigateTo('source')">Calculate Source Temperature</button>
-        <button onclick="navigateTo('ambient')">Calculate Ambient Temperature</button>
+        <h1>Thermal Calculator</h1>
+        <form id="thermalForm">
+            <label for="power">Power Dissipated (W):</label>
+            <input type="number" id="power" name="power" step="0.01" required>
+            
+            <label for="enclosureLength">Length of housing (mm):</label>
+            <input type="number" id="enclosureLength" name="enclosureLength" step="0.01" required>
+            
+            <label for="enclosureBreadth">Breadth of housing (mm):</label>
+            <input type="number" id="enclosureBreadth" name="enclosureBreadth" step="0.01" required>
+            
+            <label for="enclosureHeight">Height of housing (mm):</label>
+            <input type="number" id="enclosureHeight" name="enclosureHeight" step="0.01" required>
+            
+            <label for="enclosureThickness">Thickness of housing (mm):</label>
+            <input type="number" id="enclosureThickness" name="enclosureThickness" step="0.01" required>
+            
+            <label for="kHousing">Thermal Conductivity of Housing:</label>
+            <select id="kHousing" name="kHousing">
+                <option value="205">Aluminum (205 W/mK)</option>
+                <option value="401">Copper (401 W/mK)</option>
+                <option value="237">Silver (237 W/mK)</option>
+                <option value="3.11">Polycarbonate (3.11 W/mK)</option>
+            </select>
+            
+            <label for="pcbLength">Length of pcb (mm):</label>
+            <input type="number" id="pcbLength" name="pcbLength" step="0.01" required>
+            
+            <label for="pcbBreadth">Breadth of pcb (mm):</label>
+            <input type="number" id="pcbBreadth" name="pcbBreadth" step="0.01" required>
+            
+            <label for="pcbThickness">Thickness of pcb (mm):</label>
+            <input type="number" id="pcbThickness" name="pcbThickness" step="0.01" required>
+            
+            <label for="kpcb">Thermal Conductivity of pcb:</label>
+            <select id="kpcb" name="kpcb">
+                <option value="0.25">FR4 (0.25 W/mK)</option>
+                <option value="1.0">Ceramic (1.0 W/mK)</option>
+                <option value="8.8">Copper Clad (8.8 W/mK)</option>
+            </select>
+            
+            <label for="T_amb">Ambient Temperature (K):</label>
+            <input type="number" id="T_amb" name="T_amb" step="0.1" required>
+            
+            <input type="submit" value="Calculate">
+        </form>
     </div>
-    <script src="script.js"></script>
+    <script>
+        document.getElementById('thermalForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            localStorage.setItem('thermalData', JSON.stringify(data));
+            window.location.href = 'result.html';
+        });
+    </script>
 </body>
 </html>
