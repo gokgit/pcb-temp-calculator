@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thermal Calculator Results</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Thermal Calculator Results</h1>
+        <div id="results"></div>
+    </div>
+    <script>
+        const data = JSON.parse(localStorage.getItem('thermalData'));
+
+        const con = 0.000001;
+        const power = parseFloat(data.power);
+        const enclosureLength = parseFloat(data.enclosureLength) * 0.001;
+        const enclosureBreadth = parseFloat(data.enclosureBreadth) * 0.001;
+        const enclosureHeight = parseFloat(data.enclosureHeight) * 0.001;
+        const enclosureThickness = parseFloat(data.enclosureThickness) * 0.001;
+        const kHousing = parseFloat(data.kHousing);
+        const pcbLength = parseFloat(data.pcbLength) * 0.001;
+        const pcbBreadth = parseFloat(data.pcbBreadth) * 0.001;
+        const pcbThickness = parseFloat(data.pcbThickness) * 0.001;
+        const kpcb = parseFloat(data.kpcb);
+        const T_amb = parseFloat(data.T_amb);
+
+        const L_encl = enclosureHeight;
+        const B_encl = enclosureLength;
+        const t_encl = enclosureThickness;
+        const k_hous = kHousing;
+
+        const A_ltrl = 2 * enclosureLength * enclosureHeight + 2 * enclosureHeight * enclosureBreadth;
+        const A_top = enclosureLength * enclosureBreadth;
+        const P_top = 2 * (enclosureLength + enclosureBreadth);
+        const L_eq = 4 * A_top / P_top;
+        const A_rad = A_ltrl + A_top;
+
+        const ep = 0.85;
+
+        function fun(T_os) {
+            const h_vert = 1.42 * ((T_os - T_amb) ** 0.25 / L_encl ** 0.25);
+            const h_hor = 1.32 * ((T_os - T_amb) ** 0.25 / L_eq ** 0.25);
+            const numerator = (h_vert * A_ltrl * (T_os - T_amb)) + (h_hor * A_top * (T_os - T_amb)) + 5.67e-8 * ep * A_rad * (T_os ** 4 - T_amb ** 4) - power;
+            return [numerator, h_vert, h_hor];
+        }
+
+        function fundev(T_os) {
+            const h_vert = 1.42 * ((T_os - T_amb) / L_encl) ** 0.25;
+            const h_hor = 1.32 * ((T_os - T_amb) / L_eq) ** 0.25;
+            const diff = (h_vert * A_ltrl + h_hor * A_top + 4 * 5.67e-8 * ep * A_rad * T_os ** 3);
+            return diff;
+        }
+
+        function newtonRaphson(initialGuess, tol, maxIter) {
+            let guess = initialGuess;
+            for (let i = 0; i < maxIter; i++) {
+                const [value, h_vert, h_hor] = fun(guess);
+                const derivative = fundev(guess);
+                const newGuess = guess - value / derivative;
+                if (Math.abs(newGuess - guess) < tol) {
+                    return { result: newGuess, h_vert, h_hor };
+                }
+                guess = newGuess;
+            }
+            throw new Error('Newton-Raphson method did not converge');
+        }
+
+        const initialGuess = 370;
+        const tolerance = 0.0001;
+        const maxIterations = 1000;
+        const { result, h_vert, h_hor } = newtonRaphson(initialGuess, tolerance, maxIterations);
+
+        const T_os = result;
+        const h_vert_value = h_vert;
+        const h_hor_value = h_hor;
+
+        const thermalResults = `
+            <p>Power Dissipated (W): ${power}</p>
+            <p>Enclosure Dimensions (mm): ${data.enclosureLength} x ${data.enclosureBreadth} x ${data.enclosureHeight}</p>
+            <p>Enclosure Thickness (mm): ${data.enclosureThickness}</p>
+            <p>Thermal Conductivity of Housing (W/mK): ${data.kHousing}</p>
+            <p>PCB Dimensions (mm): ${data.pcbLength} x ${data.pcbBreadth} x ${data.pcbThickness}</p>
+            <p>Thermal Conductivity of PCB (W/mK): ${data.kpcb}</p>
+            <p>Ambient Temperature (K): ${data.T_amb}</p>
+            <p>Calculated Surface Temperature (K): ${T_os.toFixed(2)}</p>
+            <p>Vertical Heat Transfer Coefficient (W/m²K): ${h_vert_value.toFixed(2)}</p>
+            <p>Horizontal Heat Transfer Coefficient (W/m²K): ${h_hor_value.toFixed(2)}</p>
+        `;
+
+        document.getElementById('results').innerHTML = thermalResults;
+    </script>
+</body>
+</html>
